@@ -1,0 +1,87 @@
+name: CI
+
+# Runs on pull requests, and is the gate docker-publish.yml calls before it publishes
+# anything, so the checks guarding a PR and the checks guarding a deploy can't drift apart.
+# The end-to-end tests (tests/e2e, drag and drop and two pages on one link in a real browser) run
+# locally before a push.
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Matches the Dockerfile.
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # The built page served by the real production server, with a timeline made, edited and
+      # opened by both links.
+      - name: Smoke test the production server
+        run: |
+          base=http://127.0.0.1:7499
+          export LINEA_DATA=$(mktemp -d)
+          PORT=7499 node server/server.mjs &
+          server=$!
+          for _ in $(seq 1 20); do curl -sf $base/healthz && break; sleep 0.5; done
+          curl -sf $base/ | grep -q '<title>Linea</title>'
+          node --input-type=module -e "
+            const post = (p, b) => fetch('$base' + p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b) });
+            const { edit, view } = await (await post('/api/new', { lang: 'en' })).json();
+            const { doc } = await (await fetch('$base/api/t/' + edit)).json();
+            const ops = [{ op: 'name', name: 'Smoke <test>' }, { op: 'item+', item: { id: 'smoke1', lane: doc.lanes[0].id, name: 'Bar', start: 20400, end: 20410 } }];
+            if ((await post('/api/t/' + edit + '/ops', { cid: 'smoke01', b: 'b1', ops })).status !== 200) throw new Error('ops');
+            if ((await post('/api/t/' + view + '/ops', { cid: 'smoke01', b: 'b2', ops })).status !== 403) throw new Error('view link edits');
+            const page = await (await fetch('$base/e/' + edit)).text();
+            if (!page.includes('<title>Smoke &lt;test&gt; · Linea</title>') || !page.includes('noindex')) throw new Error('edit page');
+            if ((await fetch('$base/v/' + edit)).status !== 404) throw new Error('edit key on the view path');
+            const viewed = await (await fetch('$base/api/t/' + view)).json();
+            if (viewed.role !== 'view' || viewed.edit || viewed.doc.items.length !== 1) throw new Error('view link');
+            console.log('timeline ok');
+          "
+          test "$(curl -s -o /dev/null -w '%{http_code}' $base/e/AAAAAAAAAAAAAAAAAAAAAA)" = 404
+          curl -s $base/e/AAAAAAAAAAAAAAAAAAAAAA | grep -q '<div id="app">'
+          curl -sI $base/ | grep -qi "content-security-policy: default-src 'self'"
+          curl -sI $base/ | grep -i "content-security-policy" | grep -q "connect-src 'self';"
+          curl -sI $base/ | grep -qi "cache-control: no-cache"
+          curl -sf $base/robots.txt | grep -q 'Disallow: /e/'
+          curl -sf $base/manifest.webmanifest | grep -q '"name": "Linea"'
+          curl -sf -o /dev/null $base/sw.js
+          curl -sf -o /dev/null $base/og.png
+          curl -sf -o /dev/null $base/icons/apple-touch-icon.png
+          asset=$(curl -s $base/ | grep -o '/assets/[^"]*\.js' | head -1)
+          curl -sI "$base$asset" | grep -qi 'cache-control: public, max-age=31536000, immutable'
+          test "$(curl -s -o /dev/null -w '%{http_code}' $base/assets/missing.js)" = 404
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST $base/)" = 405
+          # The Census forwarder is wired in; without LINEA_CENSUS it answers locally.
+          test "$(curl -s -o /dev/null -w '%{http_code}' $base/_e.js)" = 200
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST --data '{}' $base/_e)" = 204
+          kill $server
+          wait $server || true

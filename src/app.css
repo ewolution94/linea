@@ -1,0 +1,326 @@
+/* Linea, look B: Metro (plans/linea/looks.html, the user's pick, 2026-11-02).
+   Every lane a metro line with its badge (M1, M2 …), items as solid sections with a stop at each end
+   (grab a stop to stretch), milestones as interchange stations, overlaps on parallel tracks. White
+   header and axis over a pale ground; one red for the logo and today. Archivo throughout. */
+
+/* Folio's tokens (with its fonts: Geist Mono for the links); Linea sets its own face below, and the
+   Folio elements read it through --ewo-sans. */
+@import '../vendor/ewo/tokens/index.css';
+@import '../vendor/ewo/tokens/base.css';
+@import '@fontsource-variable/archivo';
+
+:root {
+  --f: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --ground: light-dark(#f4f4f1, #101215);
+  --axbg: light-dark(#ffffff, #17191d);
+  --lhbg: light-dark(#ffffff, #17191d);
+  --pop: light-dark(#ffffff, #1d2025);
+  --hov: light-dark(rgb(21 23 26 / 0.06), rgb(238 240 242 / 0.07));
+  --ink: light-dark(#15171a, #eef0f2);
+  --ink2: light-dark(#575c63, #a4a9b0);
+  --rule: light-dark(#dcddd9, #2c3036);
+  --g1: light-dark(rgb(21 23 26 / 0.05), rgb(238 240 242 / 0.05));
+  --g2: light-dark(rgb(21 23 26 / 0.13), rgb(238 240 242 / 0.12));
+  --we: light-dark(rgb(21 23 26 / 0.025), rgb(238 240 242 / 0.025));
+  --today: light-dark(#d8232a, #ff4d52);
+  --tk: light-dark(#ffffff, #1a0b0c);
+  --focus: light-dark(#1d63b8, #6aa8ff);
+  --dropbg: light-dark(rgb(21 23 26 / 0.045), rgb(238 240 242 / 0.045));
+  --ok: light-dark(#157a3b, #4ccf7c);
+  --danger: light-dark(#c4161c, #ff6b6f);
+  /* A stop's fill. */
+  --st: light-dark(#ffffff, #101215);
+  --shadow: light-dark(rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.5));
+  /* The five lines and the ink on each. */
+  --c0: #d8232a;
+  --c1: #157a3b;
+  --c2: #f3b300;
+  --c3: #1d63b8;
+  --c4: #8b4bb4;
+  --k0: #ffffff;
+  --k1: #ffffff;
+  --k2: #1b1b1b;
+  --k3: #ffffff;
+  --k4: #ffffff;
+  /* Other people: up to six, in turn. */
+  --p0: light-dark(#c2410c, #ff9a5c);
+  --p1: light-dark(#0b6e80, #5fd3e3);
+  --p2: light-dark(#7c3aed, #b794ff);
+  --p3: light-dark(#a16207, #f5c451);
+  --p4: light-dark(#be185d, #ff8ac0);
+  --p5: light-dark(#166534, #7fe0a0);
+  --pk: light-dark(#ffffff, #101215);
+  --gutter: 16px;
+
+  /* Folio's elements (sheet, settings, toaster) in Linea's colours. */
+  --ewo-bg: var(--ground);
+  --ewo-bg-raised: var(--pop);
+  --ewo-panel: var(--pop);
+  --ewo-fg: var(--ink);
+  --ewo-fg-2: var(--ink2);
+  --ewo-fg-3: var(--ink2);
+  --ewo-line: var(--rule);
+  --ewo-line-strong: var(--ink);
+  --ewo-sans: var(--f);
+  --ewo-mono: var(--mono);
+  --ewo-accent: var(--ink);
+  --ewo-accent-ink: var(--pop);
+  --ewo-r-xl: 18px;
+}
+
+@media (min-width: 760px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+/* The rails under the items: a number, so light-dark() can't carry it. */
+:root {
+  --rail: 0.28;
+}
+
+:root[data-theme='dark'] {
+  --rail: 0.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --rail: 0.4;
+  }
+}
+
+.c0 { --c: var(--c0); --k: var(--k0); }
+.c1 { --c: var(--c1); --k: var(--k1); }
+.c2 { --c: var(--c2); --k: var(--k2); }
+.c3 { --c: var(--c3); --k: var(--k3); }
+.c4 { --c: var(--c4); --k: var(--k4); }
+
+/* Two quick taps on a control must not zoom the page: iOS Safari's double-tap zoom also made
+   sticky headers look stuck mid-page (learnings/ios-and-webkit.md, 2026-10-08). On the controls,
+   not <html>, which Safari ignores once it has an overflow. Zero specificity, so a component's own
+   touch-action still wins. */
+:where(button, a, label, summary, input, select, textarea, [role='button'], [role='radio']) {
+  touch-action: manipulation;
+}
+
+html {
+  overflow-x: clip;
+  background: var(--ground);
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--f);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+svg {
+  display: block;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* iOS zooms the page into any field under 16px: a floor for fields nobody sized. */
+@media (hover: none) {
+  :where(input, select, textarea) {
+    font-size: max(16px, 1em);
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.ic {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The logo: a red tile with an L, as on a metro map. */
+.logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: #d8232a;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font: 800 19px/1 var(--f);
+  flex: none;
+  text-decoration: none;
+}
+
+/* Pills: the scale's switch, the round buttons. */
+.seg {
+  display: inline-flex;
+  flex: none;
+  background: var(--ground);
+  border-radius: 999px;
+  padding: 3px;
+}
+
+.seg button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--ink2);
+  white-space: nowrap;
+}
+
+.seg button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--axbg);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  flex: none;
+  box-shadow: inset 0 0 0 1.5px var(--rule);
+}
+
+.pill .ic {
+  width: 16px;
+  height: 16px;
+}
+
+.pill.solid {
+  background: var(--ink);
+  color: var(--axbg);
+  box-shadow: none;
+  padding: 0 16px;
+}
+
+.pill.round {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--ink2);
+  flex: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:not(:disabled):hover,
+  .pill:not(.solid):not(:disabled):hover {
+    background: var(--hov);
+  }
+
+  .seg button:not([aria-pressed='true']):hover {
+    color: var(--ink);
+  }
+}
+
+/* The sheets' rows (Share, an item's details, Settings). */
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c);
+  flex: none;
+}
+
+.swatch[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--pop), 0 0 0 3.5px var(--ink);
+}
+
+.swatch.lane {
+  background: conic-gradient(var(--c) 0 50%, transparent 0) border-box;
+  box-shadow: inset 0 0 0 2px var(--c);
+}
+
+.field {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1.5px solid var(--rule);
+  border-radius: 12px;
+  background: var(--ground);
+  color: var(--ink);
+  outline: 0;
+}
+
+.field:focus {
+  border-color: var(--focus);
+}

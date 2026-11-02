@@ -1,0 +1,49 @@
+# The Linea stack Portainer runs on the NAS.
+#
+# This is deliberately NOT the repo's docker-compose.yml. That one carries `build: .`,
+# which would make Portainer compile the app on the NAS instead of pulling the image
+# CI already published. Paste this into Portainer's stack editor (or point a
+# Git-backed stack at this file), never that one.
+#
+# Auto-updates come from the shared Watchtower stack (development/.claude/skills/portainer/watchtower/),
+# which only touches containers carrying the label below. With it, a push to `release`
+# is the entire deploy.
+
+services:
+  linea:
+    image: ghcr.io/ewolution94/linea:latest
+    container_name: linea
+    restart: unless-stopped
+    healthcheck:
+      # Every ~14 minutes, each container on its own interval so they never line up (plans/nas-load.md).
+      interval: 831s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    ports:
+      # The port from the registry (development/.claude/skills/portainer/ports.json).
+      - "7500:7500"
+    environment:
+      - PORT=7500
+      - TZ=Europe/Berlin
+      # Visit counts: /_e and /_e.js are forwarded to Census over the `ewolution` network.
+      # Remove the line to stop counting; the page doesn't change either way.
+      - LINEA_CENSUS=http://census:4901
+    volumes:
+      # The timelines (one SQLite file). Keep it: it's every plan anyone made.
+      - linea-data:/data
+    networks:
+      # The shared network Census listens on. It must exist before this stack is created
+      # (Portainer → Networks → `ewolution`).
+      - ewolution
+    labels:
+      # The opt-in the shared Watchtower looks for (it runs with
+      # WATCHTOWER_LABEL_ENABLE=true, so unlabelled containers are never touched).
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  linea-data:
+
+networks:
+  ewolution:
+    external: true
