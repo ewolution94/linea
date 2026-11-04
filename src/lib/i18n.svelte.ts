@@ -8,7 +8,7 @@
 
 import { readConfig } from '../../vendor/ewo/elements/config-client.js';
 import { themeShift } from '../../vendor/ewo/elements/theme-shift.js';
-import { languageFor } from './defaults.ts';
+import { languageFor, ownLanguage } from './defaults.ts';
 import { prefs, type Language } from './prefs.svelte.ts';
 import { STRINGS } from './strings.ts';
 
@@ -26,8 +26,20 @@ function detect(): Locale {
 let system = $state<Locale>(detect());
 addEventListener('languagechange', () => (system = detect()));
 
-/** The language a pick shows: this device's own, else Dashboard's default, else the browser's. */
-const wanted = (pick: Language): Locale => languageFor(pick, readConfig().lang, system);
+/** The family's key, `ewo:lang`: a pick for every app of the family on this device. */
+const family = (() => {
+  try {
+    return localStorage.getItem('ewo:lang');
+  } catch {
+    return null;
+  }
+})();
+
+/**
+ * The language a pick shows: this device's own (made here, else the family's key), else Dashboard's
+ * default, else the browser's.
+ */
+const wanted = (pick: Language): Locale => languageFor(ownLanguage(pick, family), readConfig().lang, system);
 
 export function locale(): Locale {
   return wanted(prefs.language);

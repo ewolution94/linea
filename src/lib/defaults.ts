@@ -10,6 +10,13 @@ export type Locale = 'en' | 'de';
 export const themeFor = (own: Theme, dashboard: unknown): Theme =>
   own !== 'system' ? own : dashboard === 'light' || dashboard === 'dark' ? dashboard : 'system';
 
+/**
+ * This device's language pick: the one made here (`linea:prefs`), else the family's key `ewo:lang`, a
+ * pick for every app of the family (QA's runs set it to `en`), else none (`system`).
+ */
+export const ownLanguage = (pick: Locale | 'system', family: unknown): Locale | 'system' =>
+  pick !== 'system' ? pick : family === 'de' || family === 'en' ? family : 'system';
+
 /** The language to show: this device's choice, else Dashboard's, else the browser's (`detected`). */
 export const languageFor = (own: Locale | 'system', dashboard: unknown, detected: Locale): Locale =>
   own !== 'system' ? own : dashboard === 'de' || dashboard === 'en' ? dashboard : detected;

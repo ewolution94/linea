@@ -6,7 +6,7 @@ import vm from 'node:vm';
 // order a setting is decided in: this device's own choice, then Dashboard's default, then the
 // built-in one (src/lib/defaults.ts, and public/boot.js before first paint).
 import { checkManifest, resolve } from '../vendor/ewo/elements/config-core.js';
-import { languageFor, themeFor } from '../src/lib/defaults.ts';
+import { languageFor, ownLanguage, themeFor } from '../src/lib/defaults.ts';
 
 const manifest = JSON.parse(readFileSync(new URL('../public/ewo.config.json', import.meta.url), 'utf8'));
 
@@ -44,6 +44,13 @@ test('the device’s own choice beats Dashboard’s default, which beats the bui
   assert.equal(languageFor('system', 'system', 'de'), 'de');
   assert.equal(languageFor('system', undefined, 'en'), 'en');
   assert.equal(languageFor('system', 'fr', 'en'), 'en');
+  // QA's `ewo:lang` = `en` is this device's own pick when nothing is picked here, so it beats a
+  // German family default; a pick here (`linea:prefs`) beats it.
+  assert.equal(languageFor(ownLanguage('system', 'en'), 'de', 'de'), 'en');
+  assert.equal(ownLanguage('de', 'en'), 'de');
+  assert.equal(ownLanguage('system', null), 'system');
+  assert.equal(ownLanguage('system', 'system'), 'system');
+  assert.equal(ownLanguage('system', 'fr'), 'system');
 });
 
 /** public/boot.js against a stub page: the theme it applies before first paint. */
