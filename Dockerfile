@@ -19,6 +19,8 @@ ENV NODE_ENV=production PORT=8080 TZ=Europe/Berlin LINEA_DATA=/data
 COPY --from=build /app/dist ./dist
 COPY server ./server
 COPY shared ./shared
+# Folio's config helper (Dashboard's defaults), at the path server/server.mjs imports it from.
+COPY vendor/ewo/elements/config-server.js vendor/ewo/elements/config-core.js ./vendor/ewo/elements/
 COPY package.json ./
 RUN mkdir -p /data && chown node:node /data
 VOLUME /data

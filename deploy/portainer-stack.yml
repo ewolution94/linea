@@ -29,6 +29,7 @@ services:
       # Visit counts: /_e and /_e.js are forwarded to Census over the `ewolution` network.
       # Remove the line to stop counting; the page doesn't change either way.
       - LINEA_CENSUS=http://census:4901
+      - DASHBOARD_URL=http://dashboard:8081
     volumes:
       # The timelines (one SQLite file). Keep it: it's every plan anyone made.
       - linea-data:/data

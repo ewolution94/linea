@@ -1,11 +1,14 @@
 /**
- * The language (the browser's until one is picked in Settings), and the strings.
+ * The language (Dashboard's default, else the browser's, until one is picked in Settings), and the
+ * strings.
  *
  * The strings are in `strings.ts`, English and German: `t('key', { n: 3 })` in a template updates
  * when the language changes.
  */
 
+import { readConfig } from '../../vendor/ewo/elements/config-client.js';
 import { themeShift } from '../../vendor/ewo/elements/theme-shift.js';
+import { languageFor } from './defaults.ts';
 import { prefs, type Language } from './prefs.svelte.ts';
 import { STRINGS } from './strings.ts';
 
@@ -23,15 +26,18 @@ function detect(): Locale {
 let system = $state<Locale>(detect());
 addEventListener('languagechange', () => (system = detect()));
 
+/** The language a pick shows: this device's own, else Dashboard's default, else the browser's. */
+const wanted = (pick: Language): Locale => languageFor(pick, readConfig().lang, system);
+
 export function locale(): Locale {
-  return prefs.language === 'system' ? system : prefs.language;
+  return wanted(prefs.language);
 }
 
 /** A pick in Settings: the page follows under Folio's veil (themeShift), unless the language on
- *  screen stays the same (system → the browser's own language). */
+ *  screen stays the same (Default → the language Default already shows). */
 export function setLanguage(next: Language) {
   if (next === prefs.language) return;
-  if ((next === 'system' ? system : next) === locale()) prefs.language = next;
+  if (wanted(next) === locale()) prefs.language = next;
   else themeShift(() => (prefs.language = next));
 }
 

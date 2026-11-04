@@ -70,6 +70,7 @@ A push to `release` runs the checks (`ci.yml`) and publishes `ghcr.io/ewolution9
 | `LINEA_DATA` | `./data` (`/data` in the image) | The folder for `linea.sqlite`. |
 | `LINEA_ORIGIN` | `https://linea.ewolution.cloud` | The origin in canonical links and link previews. |
 | `LINEA_CENSUS` | off | Census's ingest origin (`http://census:4901` on the `ewolution` network). |
+| `DASHBOARD_URL` | off | Dashboard's apps' port (`http://dashboard:8081` on the `ewolution` network): the language and theme a device that hasn't picked starts from (the family's, or Linea's own). Off or down: the built-in ones, as before. |
 
 ## Project layout
 
